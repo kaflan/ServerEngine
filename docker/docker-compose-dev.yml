@@ -1,0 +1,31 @@
+version: '2'
+services:
+  database:
+    image: postgres:9.6
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_USER: postgres
+      POSTGRES_DB: skeleton_node
+      PGDATA: /var/db
+    ports:
+      - "5454:5432"
+
+  server:
+    image: skeleton:latest
+    container_name: skeleton
+    ports:
+      - "8000:3000"
+    environment:
+      - DB_HOST=database
+      - LISTEN_HOST=0.0.0.0
+      - LISTEN_PORT=3000
+    restart: always
+    mem_limit: 100000000
+    volumes:
+      - ../expressServer:/usr/src/app/expressServer/
+      - ./run-docker.sh:/usr/src/app/run-docker.sh
+    links:
+      - database
+    depends_on:
+      - database
+    command: ["sh", "./run-docker.sh", "database:5432"]

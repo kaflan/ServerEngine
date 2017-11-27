@@ -1,0 +1,14 @@
+{
+  "server": {
+    "port": 3000,
+    "modulesPath": "./modules",
+    "authModule": "auth"
+  },
+  "view": {
+    "path": "../../../views",
+    "engine": "ejs"
+  },
+  "jwt": {
+    "secret": "293828736g27f63g"
+  }
+}

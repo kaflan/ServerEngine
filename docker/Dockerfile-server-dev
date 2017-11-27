@@ -1,0 +1,15 @@
+FROM node:8.7-alpine
+ENV NODE_ENV=build
+# Create app directory
+WORKDIR /usr/src/app
+
+
+# Install app dependencies
+COPY ./ /usr/src/app/
+
+RUN cd /usr/src/app && npm install && npm i --global nodemon sequelize-cli;
+
+WORKDIR /usr/src/app
+
+EXPOSE 3000
+ENV NODE_ENV=development

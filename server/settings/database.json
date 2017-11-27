@@ -1,0 +1,39 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "test123",
+    "database": "skeleton_node",
+
+    "host": "localhost",
+    "port": "5432",
+    "dialect": "postgres",
+
+    "seederStorage": "sequelize",
+    "migrationStorage": "sequelize"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "test123",
+    "database": "skeleton_node",
+
+    "host": "127.0.0.1",
+    "port": "5432",
+    "dialect": "postgres",
+
+    "seederStorage": "sequelize",
+    "migrationStorage": "sequelize"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "test123",
+    "database": "skeleton_node",
+
+    "host": "127.0.0.1",
+    "port": "5432",
+    "dialect": "postgres",
+    "logging": false,
+
+    "seederStorage": "sequelize",
+    "migrationStorage": "sequelize"
+  }
+}

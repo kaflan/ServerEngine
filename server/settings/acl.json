@@ -1,0 +1,30 @@
+{
+  "allow": [
+    {
+      "roles": ["user"],
+      "allows": [
+        {
+          "resources": "users",
+          "permissions": [
+            "list",
+            "self-update"
+          ]
+        }
+      ]
+    },
+    {
+      "roles": ["admin"],
+      "allows": [
+        {
+          "resources": "posts",
+          "permissions": [
+            "list",
+            "update",
+            "remove",
+            ""
+          ]
+        }
+      ]
+    }
+  ]
+}
