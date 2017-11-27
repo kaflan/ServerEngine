@@ -4,14 +4,14 @@ import Permission from "./permission.model";
 @Table({
   timestamps: false,
   freezeTableName: true,
-  tableName: 'groups'
+  tableName: 'resources'
 })
-export class Group extends Model<Group> {
+export class Resource extends Model<Resource> {
   @Column
   name: string;
 
-  @HasMany(() => Permission)
-  permissions: Permission[];
+  @Column(DataType.ARRAY(DataType.STRING()))
+  permissions: Array<string>;
 }
 
-export default Group;
+export default Resource;

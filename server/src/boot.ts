@@ -11,6 +11,7 @@ import Database from "./core/Database";
 import {ExpressServer} from "./core/ExpressServer";
 import {Auth} from "./core/Auth";
 import {Permissions} from "./core/modules/permissions/Permissions";
+import {applyAcl} from "./permissions";
 
 (async function () {
   try {
@@ -30,6 +31,8 @@ import {Permissions} from "./core/modules/permissions/Permissions";
     new Auth(globalVars.settings);
 
     await globalVars.expressServer.init();
+    await globalVars.permissions.init();
+    await applyAcl();
     globalVars.expressServer.start();
   } catch (err) {
     console.error(err);
