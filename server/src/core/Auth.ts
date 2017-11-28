@@ -3,6 +3,7 @@ import * as passportJwt from 'passport-jwt';
 import * as path from "path";
 import * as jwt from 'jwt-simple';
 import {IConfig} from "./interfaces/ISettings";
+import User from "../modules/user/user.model";
 
 export class Auth {
   private options = {
@@ -15,6 +16,9 @@ export class Auth {
   constructor(private settings: IConfig) {
     this.getAuthModule();
     this.passport = passport.use(new passportJwt.Strategy(this.options, this.verify));
+    this.passport.serializeUser(function(user, done) {
+      done(null, user.id);
+    });
   }
 
   public initialize() {

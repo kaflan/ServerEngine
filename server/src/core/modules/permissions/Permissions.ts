@@ -35,7 +35,10 @@ export class Permissions {
         if (!req.user) {
           throw new ApiAclDenyError(resource, actions);
         }
-        this.checkPermissions(req.user, resource, actions)
+        if (!this.checkPermissions(req.user, resource, actions)) {
+          throw new ApiAclDenyError(resource, actions);
+        }
+        next();
       } catch (error) {
         next(error)
       }
@@ -141,6 +144,8 @@ export class Permissions {
   }
 
   private checkPermissions(user, resource, actions: Array<string> | string) {
+    if (user.permissions[this.getFullPermission(resource, '*')]) return true;
+
     if (typeof actions === 'string') {
       return !!user.permissions[this.getFullPermission(resource, actions)];
     }

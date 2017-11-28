@@ -17,6 +17,8 @@ interface RouteOptions extends Object {
   method: Methods;
   handler: RequestHandler;
   isProtected?: boolean;
+  permissions?: Array<string> | string;
+  resourceName?: string;
 }
 
 export class Router {
@@ -25,17 +27,19 @@ export class Router {
     return this._routes;
   }
 
-  constructor(private basePath = '/', routes: Array<RouteOptions> = []) {
+  constructor(private resourceName, private basePath = '/', routes: Array<RouteOptions> = []) {
     routes.forEach(item => this.register(item));
   }
 
   public static register(options: RouteOptions) {
     logger.info(`Route registered: ${options.method} - ${options.path}`);
-    if (options.isProtected) {
-      globalVars.expressServer.app[options.method](options.path, globalVars.auth.isAuthenticated(), options.handler);
-    } else {
-      globalVars.expressServer.app[options.method](options.path, options.handler);
+    if (options.permissions) {
+      globalVars.expressServer.app[options.method](options.path, globalVars.auth.isAuthenticated(), globalVars.permissions.checkAccess(options.resourceName, options.permissions), options.handler);
     }
+    if (options.isProtected) {
+      return globalVars.expressServer.app[options.method](options.path, globalVars.auth.isAuthenticated(), options.handler);
+    }
+    globalVars.expressServer.app[options.method](options.path, options.handler);
   }
 
   public static async injectModuleRouters(modulesPath) {
@@ -48,7 +52,7 @@ export class Router {
       if (fileStat.isDirectory()) {
         await Router.injectModuleRouters(path.join(modulesPath, file));
       }
-      if (path.extname(file) !== '.js' ||  !~file.indexOf('router')) {
+      if (path.extname(file) !== '.js' || !~file.indexOf('router')) {
         continue;
       }
       require(path.join(modulesPath, file));
@@ -58,6 +62,7 @@ export class Router {
   public register(options: RouteOptions) {
     let localOptions = Object.assign({}, options);
     localOptions.path = path.join(this.basePath, localOptions.path);
+    localOptions.resourceName = localOptions.resourceName || this.resourceName;
     Router.register(localOptions);
     this._routes.push(localOptions);
   }
