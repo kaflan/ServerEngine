@@ -1,7 +1,21 @@
 import * as bcyrpt from 'bcrypt-as-promised';
-import {Table, Column, Model, HasMany, UpdatedAt, CreatedAt, DefaultScope, DataType} from 'sequelize-typescript';
+import {
+  Table, Column, Model, HasMany, UpdatedAt, CreatedAt, DefaultScope, DataType,
+  Scopes
+} from 'sequelize-typescript';
 import {Post} from "../post/post.model";
 
+@DefaultScope({
+  attributes: ['id', 'email', 'name', 'birthday']
+})
+@Scopes({
+  full: {
+    include: [() => Post]
+  },
+  auth: {
+    attributes: ['id', 'email', 'password']
+  }
+})
 @Table({
   timestamps: true,
   freezeTableName: true,

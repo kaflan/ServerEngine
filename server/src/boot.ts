@@ -16,7 +16,6 @@ import {applyAcl} from "./permissions";
 (async function () {
   try {
     const settings = new Settings<IConfig>('settings.json');
-    const aclSettings = new Settings<IConfig>('acl.json');
 // Init global variables
     globalVars.settings = settings.get();
     globalVars.configurator = new Configurator(globalVars.settings);
@@ -24,7 +23,7 @@ import {applyAcl} from "./permissions";
     globalVars.expressServer = new ExpressServer(globalVars.settings);
     globalVars.database = new Database(globalVars.settings);
     globalVars.sequelize = globalVars.database.getConnection();
-    globalVars.permissions = new Permissions(aclSettings, globalVars.sequelize);
+    globalVars.permissions = new Permissions(globalVars.sequelize);
     await globalVars.database.injectModels();
     await globalVars.permissions.init();
 

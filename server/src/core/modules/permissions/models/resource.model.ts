@@ -11,7 +11,7 @@ export class Resource extends Model<Resource> {
   name: string;
 
   @Column(DataType.ARRAY(DataType.STRING()))
-  permissions: Array<string>;
+  actions: Array<string>;
 }
 
 export default Resource;

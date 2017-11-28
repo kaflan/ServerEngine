@@ -12,7 +12,7 @@ export class AuthController {
       }
       const email = req.body.email;
       const password = req.body.password;
-      const user = await User.findOne<User>({where: {email: email}});
+      const user = await User.scope('auth').findOne<User>({where: {email: email}});
 
       if (!user) {
         throw new ApiValidationError(IRC.NON_EXISTENT_USER);
@@ -53,12 +53,14 @@ export class AuthController {
 
   static async verify(jwt_payload, done) {
     try {
-      const user = await User.findOne<User>({where: {id: jwt_payload.id, email: jwt_payload.email}});
-      if (!user || !user.checkPassword(jwt_payload.password)) {
+      const user = await User.scope('auth').findOne<User>({where: {id: jwt_payload.id, email: jwt_payload.email}});
+      if (!user || user.password !== jwt_payload.password) {
         return done(null, false);
       }
+      let userData = user.get({plain: true});
+      userData.permissions = await globalVars.permissions.getUserPermissions(user.id);
 
-      return done(null, user);
+      return done(null, userData);
     } catch (error) {
       return done(error, false);
     }

@@ -16,6 +16,7 @@ interface RouteOptions extends Object {
   path: string;
   method: Methods;
   handler: RequestHandler;
+  isProtected?: boolean;
 }
 
 export class Router {
@@ -30,7 +31,11 @@ export class Router {
 
   public static register(options: RouteOptions) {
     logger.info(`Route registered: ${options.method} - ${options.path}`);
-    globalVars.expressServer.app[options.method](options.path, options.handler);
+    if (options.isProtected) {
+      globalVars.expressServer.app[options.method](options.path, globalVars.auth.isAuthenticated(), options.handler);
+    } else {
+      globalVars.expressServer.app[options.method](options.path, options.handler);
+    }
   }
 
   public static async injectModuleRouters(modulesPath) {

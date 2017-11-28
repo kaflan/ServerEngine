@@ -29,10 +29,10 @@ export class ExpressServer {
     this.app.use(helmet());
     this.app.set('views', path.join(__dirname, this.config.view.path));
     this.app.set('view engine', this.config.view.engine);
+    this.app.use(globalVars.auth.initialize());
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({extended: false}));
     this.app.use(cookieParser());
-    this.app.use(globalVars.auth.initialize());
     await Router.injectModuleRouters(path.join(__dirname, '../', this.config.server.modulesPath));
     this.app.use(globalVars.configurator.errorsHandler);
     this.app.use(globalVars.configurator.notFoundHandler);

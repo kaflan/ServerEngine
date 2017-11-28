@@ -6,22 +6,27 @@ import {IConfig} from "./interfaces/ISettings";
 
 export class Auth {
   private options = {
-    jwtFromRequest: passportJwt.ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: 'secret'
+    jwtFromRequest: this.jwtExtractor,
+    secretOrKey: this.settings.jwt.secret
   };
   private verify: Function;
+  private passport = null;
 
   constructor(private settings: IConfig) {
     this.getAuthModule();
-    passport.use(new passportJwt.Strategy(this.options, this.verify));
+    this.passport = passport.use(new passportJwt.Strategy(this.options, this.verify));
   }
 
   public initialize() {
-    return passport.initialize();
+    return this.passport.initialize();
   }
 
   public generateToken(payload) {
     return jwt.encode(payload, this.settings.jwt.secret);
+  }
+
+  public isAuthenticated() {
+    return this.passport.authenticate('jwt', {session: false});
   }
 
   private getAuthModule() {
@@ -33,5 +38,9 @@ export class Auth {
     );
     const module = require(authModulePath).default;
     this.verify = module.verify;
+  }
+
+  private jwtExtractor(req) {
+    return req.headers.jwt;
   }
 }

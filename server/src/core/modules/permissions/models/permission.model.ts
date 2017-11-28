@@ -20,7 +20,7 @@ export class Permission extends Model<Permission> {
   resourceId: number;
 
   @Column(DataType.ARRAY(DataType.STRING()))
-  permissions: Array<string>;
+  actions: Array<string>;
 
   @BelongsTo(() => Resource)
   resource: Resource;

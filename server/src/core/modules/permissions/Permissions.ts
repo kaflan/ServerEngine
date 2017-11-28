@@ -8,18 +8,19 @@ import Group from "./models/group.model";
 import Permission from "./models/permission.model";
 import Resource from "./models/resource.model";
 import UserGroup from "./models/userGroup.model";
+import {ApiAclDenyError} from "../../Errors";
 
 
 type GroupPermissions = {
   resource: string;
-  permissions: Array<string>;
+  actions: Array<string>;
 }
 
 export class Permissions {
   public resources: Array<Resource> = [];
   public groups: Array<Group> = [];
 
-  constructor(private aclConfig: IAclConfig, private sequelize: Sequelize) {
+  constructor(private sequelize: Sequelize) {
   }
 
   async init() {
@@ -28,35 +29,71 @@ export class Permissions {
     await this.loadData();
   }
 
-  async loadData() {
-    this.resources = await Resource.findAll<Resource>();
-    this.groups = await Group.findAll<Group>({
-      include: [{
-        model: Permission,
-        include: [Resource]
+  public checkAccess(resource, actions: Array<string> | string) {
+    return (req, res, next) => {
+      try {
+        if (!req.user) {
+          throw new ApiAclDenyError(resource, actions);
+        }
+        this.checkPermissions(req.user, resource, actions)
+      } catch (error) {
+        next(error)
+      }
+    }
+  }
+
+  public async getUserGroups(userId: number) {
+    let data = await UserGroup.findAll<UserGroup>({
+      where: {userId}, include: [{
+        model: Group,
+        include: [{
+          model: Permission,
+          include: [Resource]
+        }]
       }]
     });
+    return data.map(item => item.get({plain: true}));
   }
 
-  async getUserGroups(userId) {
-    await UserGroup.findAll({where: {userId}, include: [Permission, Group]});
+  public async getUserPermissions(userId: number) {
+    let data = await UserGroup.findAll<UserGroup>({
+      where: {userId}, include: [{
+        model: Group,
+        include: [{
+          model: Permission,
+          include: [Resource]
+        }]
+      }]
+    });
+    let userPermissions = {};
+    for (let item of data) {
+      let group = item.group.get({plain: true});
+      for (let groupPermission of group.permissions) {
+        if (!groupPermission.actions) {
+          continue;
+        }
+        for (let action of groupPermission.actions) {
+          userPermissions[this.getFullPermission(groupPermission.resource.name, action)] = true;
+        }
+      }
+    }
+    return userPermissions;
   }
 
-  async createResource(name, resourcePerms: Array<string>) {
+  public async createResource(name, resourcePerms: Array<string>) {
     if (_.find(this.resources, {name})) return;
-    let resource = new Resource({name, permissions: resourcePerms});
-    await resource.save();
+    await Resource.create({name, actions: resourcePerms});
   }
 
-  async extendResource(name, resourcePerms: Array<string>) {
+  public async extendResource(name, resourcePerms: Array<string>) {
     let resource = await Resource.findOne<Resource>({where: {name}});
-    let newPerms = _.concat(resource.permissions, resourcePerms);
-    newPerms = _.uniq(newPerms);
-    resource.permissions = newPerms;
+    let newActions = _.concat(resource.actions, resourcePerms);
+    newActions = _.uniq(newActions);
+    resource.actions = newActions;
     await resource.save();
   }
 
-  async createGroup(name: string, groupPerms: Array<GroupPermissions> = []) {
+  public async createGroup(name: string, groupPerms: Array<GroupPermissions> = []) {
     if (_.find(this.groups, {name})) return;
     let group = new Group({name});
     await group.save();
@@ -66,27 +103,54 @@ export class Permissions {
     await this.extendGroup(group, groupPerms);
   }
 
-  async extendGroup(group: string | Group, groupPerms: Array<GroupPermissions>) {
+  public async extendGroup(group: string | Group, groupPerms: Array<GroupPermissions>) {
     let preparedPermissions = [];
     let groupInstance = await this.getGroupInstance(group);
 
     await Bluebird.each(groupPerms, async (item) => {
       const resource = await Resource.findOne({where: {name: item.resource}});
-      preparedPermissions.push({groupId: groupInstance.id, resourceId: resource.id, permissions: item.permissions});
+      preparedPermissions.push({groupId: groupInstance.id, resourceId: resource.id, actions: item.actions});
     });
     await Permission.bulkCreate(preparedPermissions);
   }
 
-  async addToGroup(group, userId) {
+  public async addToGroup(group, userId) {
     let groupInstance = await this.getGroupInstance(group);
-    new UserGroup({groupId: groupInstance.id, userId: userId});
+    await UserGroup.create({groupId: groupInstance.id, userId: userId});
   }
 
-  async getGroupInstance(group: string | Group): Promise<Group> {
+  private async getGroupInstance(group: string | Group): Promise<Group> {
     if (group instanceof Group) {
       return group;
     }
     return await Group.findOne<Group>({where: {name: group}});
+  }
+
+  private async loadData() {
+    this.resources = await Resource.findAll<Resource>();
+    this.groups = await Group.findAll<Group>({
+      include: [{
+        model: Permission,
+        include: [Resource]
+      }]
+    });
+  }
+
+  private getFullPermission(resource, action) {
+    return `${resource}.${action}`;
+  }
+
+  private checkPermissions(user, resource, actions: Array<string> | string) {
+    if (typeof actions === 'string') {
+      return !!user.permissions[this.getFullPermission(resource, actions)];
+    }
+    let result = true;
+    actions.forEach(action => {
+      if (!user.permissions[this.getFullPermission(resource, action)]) {
+        result = false;
+      }
+    });
+    return result;
   }
 
   /**

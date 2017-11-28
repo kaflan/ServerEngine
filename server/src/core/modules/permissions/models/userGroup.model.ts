@@ -1,6 +1,6 @@
 import {
   Table, Column, Model, HasMany, UpdatedAt, CreatedAt, DefaultScope, DataType,
-  ForeignKey
+  ForeignKey, BelongsTo
 } from 'sequelize-typescript';
 import Group from "./group.model";
 
@@ -16,6 +16,9 @@ export class UserGroup extends Model<UserGroup> {
 
   @Column
   userId: number;
+
+  @BelongsTo(() => Group)
+  group: Group;
 }
 
 export default UserGroup;

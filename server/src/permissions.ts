@@ -17,12 +17,14 @@ export async function applyAcl() {
     "create"
   ]);
   await globalVars.permissions.createGroup("user", [
-    {resource: "users", permissions: ["list", "self-update"]},
-    {resource: "posts", permissions: ["list", "self-update", "self-delete", "create"]}
+    {resource: "users", actions: ["list", "self-update"]},
+    {resource: "posts", actions: ["list", "self-update", "self-delete", "create"]}
   ]);
   await globalVars.permissions.createGroup("admin", [
-    {resource: "users", permissions: ["*"]},
-    {resource: "posts", permissions: ["*"]}
+    {resource: "users", actions: ["*"]},
+    {resource: "posts", actions: ["*"]}
   ]);
+
+  //await globalVars.permissions.addToGroup("admin", 1);
 }
 
