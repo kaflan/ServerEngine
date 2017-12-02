@@ -1,13 +1,13 @@
 {
-  "name": "engine",
+  "name": "ServerEngine",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Simple server structure on nodejs with typescript",
+  "main": "server/dist/boot.js",
   "scripts": {
     "build": "tsc"
   },
   "author": "Ivan Baskov",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "acl": "^0.4.11",
     "acl-sequelize": "^0.2.0",
