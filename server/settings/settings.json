@@ -4,6 +4,11 @@
     "modulesPath": "./modules",
     "authModule": "auth"
   },
+  "logger": {
+    "level": "info",
+    "logsFile": "logs/combined.log",
+    "errorsFile": "logs/errors.log"
+  },
   "view": {
     "path": "../../../views",
     "engine": "ejs"

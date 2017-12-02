@@ -2,14 +2,17 @@ export interface ISettings {
   get(mode?: 'developmnet' | 'test' | 'production'): IConfig;
 }
 
-export interface IAclConfig {
-
+export interface IConfig {
+  server: IServerConfig;
+  logger: ILoggerConfig;
+  jwt: IJwtConfig;
+  view: IViewConfig;
 }
 
-export interface IConfig {
-  server?: IServerConfig;
-  jwt?: IJwtConfig;
-  view?: IViewConfig;
+export interface ILoggerConfig {
+  level: string;
+  logsFile: string;
+  errorsFile: string;
 }
 
 export interface IDatabaseConfig {

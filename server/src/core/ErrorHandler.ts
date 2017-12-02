@@ -2,8 +2,8 @@ import {Request, Response, NextFunction} from 'express';
 import * as Sequelize from 'sequelize';
 import IRC from '../IRC';
 import {IError} from './interfaces/IError';
-import logger from "./Logger";
 import {ApiAclDenyError, ApiValidationError, SchemaValidationError} from "./Errors";
+import globalVars from "./Injector";
 
 const env: string = process.env.NODE_ENV || 'development';
 
@@ -62,7 +62,7 @@ export class ErrorHandler {
   }
 
   private static handleDatabaseError(err, res: Response): Response {
-    logger.error(err);
+    globalVars.logger.error(err);
     if (!this.isDev) {
       return res
         .status(IRC['INTERNAL_SERVER_ERROR'].responseCode)
@@ -78,7 +78,7 @@ export class ErrorHandler {
   }
 
   private static handleUnprocessedError(err, res: Response): Response {
-    logger.error(err);
+    globalVars.logger.error(err);
     if (err.trace) {
       console.trace(err.trace);
     }

@@ -2,21 +2,16 @@ import * as _ from 'lodash';
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as Bluebird from 'bluebird';
-import {IAclConfig} from '../../interfaces/ISettings';
 import {Sequelize} from "sequelize-typescript";
 import Group from "./models/group.model";
 import Permission from "./models/permission.model";
 import Resource from "./models/resource.model";
 import UserGroup from "./models/userGroup.model";
-import {ApiAclDenyError} from "../../Errors";
+import {ApiAclDenyError} from "../Errors";
+import {GroupPermissions, IPermissions, UserGroups} from "../interfaces/IPermissions";
+import {RequestHandler} from "express";
 
-
-type GroupPermissions = {
-  resource: string;
-  actions: Array<string>;
-}
-
-export class Permissions {
+export class Permissions implements IPermissions {
   public resources: Array<Resource> = [];
   public groups: Array<Group> = [];
 
@@ -29,7 +24,7 @@ export class Permissions {
     await this.loadData();
   }
 
-  public checkAccess(resource, actions: Array<string> | string) {
+  public checkAccess(resource, actions: Array<string> | string): RequestHandler {
     return (req, res, next) => {
       try {
         if (!req.user) {
@@ -45,7 +40,7 @@ export class Permissions {
     }
   }
 
-  public async getUserGroups(userId: number) {
+  public async getUserGroups(userId: number): Promise<Array<UserGroups>> {
     let data = await UserGroup.findAll<UserGroup>({
       where: {userId}, include: [{
         model: Group,
@@ -55,10 +50,10 @@ export class Permissions {
         }]
       }]
     });
-    return data.map(item => item.get({plain: true}));
+    return data.map((item) => item.get({plain: true}));
   }
 
-  public async getUserPermissions(userId: number) {
+  public async getUserPermissions(userId: number): Promise<Object> {
     let data = await UserGroup.findAll<UserGroup>({
       where: {userId}, include: [{
         model: Group,
@@ -83,12 +78,12 @@ export class Permissions {
     return userPermissions;
   }
 
-  public async createResource(name, resourcePerms: Array<string>) {
+  public async createResource(name: string, resourcePerms: Array<string>) {
     if (_.find(this.resources, {name})) return;
     await Resource.create({name, actions: resourcePerms});
   }
 
-  public async extendResource(name, resourcePerms: Array<string>) {
+  public async extendResource(name: string, resourcePerms: Array<string>) {
     let resource = await Resource.findOne<Resource>({where: {name}});
     let newActions = _.concat(resource.actions, resourcePerms);
     newActions = _.uniq(newActions);
@@ -117,7 +112,7 @@ export class Permissions {
     await Permission.bulkCreate(preparedPermissions);
   }
 
-  public async addToGroup(group, userId) {
+  public async addToGroup(group: string | Group, userId: number) {
     let groupInstance = await this.getGroupInstance(group);
     await UserGroup.create({groupId: groupInstance.id, userId: userId});
   }

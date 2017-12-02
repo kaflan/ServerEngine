@@ -1,5 +1,5 @@
 import User from "../user/user.model";
-import globalVars from "../../core/GlobalVars";
+import globalVars from "../../core/Injector";
 import {ApiValidationError, SchemaValidationError} from "../../core/Errors";
 import IRC from "../../IRC";
 import {registrationDataValidator} from "./auth.validator";

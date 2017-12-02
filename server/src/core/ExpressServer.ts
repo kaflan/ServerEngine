@@ -5,7 +5,7 @@ import * as cookieParser from "cookie-parser";
 import * as helmet from 'helmet';
 import * as http from "http";
 import {IConfig} from "./interfaces/ISettings";
-import {globalVars} from "./GlobalVars";
+import {Injector} from "./Injector";
 import {Router} from "./Router";
 
 export class ExpressServer {
@@ -25,17 +25,22 @@ export class ExpressServer {
     this._app = value;
   }
 
+  /**
+   * Function to init Express app
+   * Sets body parsers, error handlers, init authentication ant etc.
+   * @returns {Promise<void>}
+   */
   public async init() {
     this.app.use(helmet());
     this.app.set('views', path.join(__dirname, this.config.view.path));
     this.app.set('view engine', this.config.view.engine);
-    this.app.use(globalVars.auth.initialize());
+    this.app.use(Injector.auth.initialize());
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({extended: false}));
     this.app.use(cookieParser());
     await Router.injectModuleRouters(path.join(__dirname, '../', this.config.server.modulesPath));
-    this.app.use(globalVars.configurator.errorsHandler);
-    this.app.use(globalVars.configurator.notFoundHandler);
+    this.app.use(Injector.configurator.errorsHandler);
+    this.app.use(Injector.configurator.notFoundHandler);
   }
 
   public start() {
@@ -58,11 +63,11 @@ export class ExpressServer {
     // handle specific listen errors with friendly messages
     switch (error.code) {
       case 'EACCES':
-        console.error(bind + ' requires elevated privileges');
+        Injector.logger.error(bind + ' requires elevated privileges');
         process.exit(1);
         break;
       case 'EADDRINUSE':
-        console.error(bind + ' is already in use');
+        Injector.logger.error(bind + ' is already in use');
         process.exit(1);
         break;
       default:
@@ -75,7 +80,7 @@ export class ExpressServer {
     const bind = typeof addr === 'string'
       ? 'pipe ' + addr
       : 'port ' + addr.port;
-    console.log('Listening on ' + bind);
+    Injector.logger.info('Listening on ' + bind);
   }
 }
 

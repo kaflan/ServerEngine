@@ -3,9 +3,10 @@ import * as passportJwt from 'passport-jwt';
 import * as path from "path";
 import * as jwt from 'jwt-simple';
 import {IConfig} from "./interfaces/ISettings";
-import User from "../modules/user/user.model";
+import {IAuth} from "./interfaces/IAuth";
+import {RequestHandler} from "express";
 
-export class Auth {
+export class Auth implements IAuth {
   private options = {
     jwtFromRequest: this.jwtExtractor,
     secretOrKey: this.settings.jwt.secret
@@ -29,10 +30,13 @@ export class Auth {
     return jwt.encode(payload, this.settings.jwt.secret);
   }
 
-  public isAuthenticated() {
+  public isAuthenticated(): RequestHandler {
     return this.passport.authenticate('jwt', {session: false});
   }
 
+  /**
+   * Function to find and inject auth module which set in settings file
+   */
   private getAuthModule() {
     const authModulePath = path.join(
       __dirname, '../',

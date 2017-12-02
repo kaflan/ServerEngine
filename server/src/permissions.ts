@@ -1,4 +1,4 @@
-import globalVars from "./core/GlobalVars";
+import globalVars from "./core/Injector";
 
 export async function applyAcl() {
   await globalVars.permissions.createResource("users", [
@@ -25,6 +25,6 @@ export async function applyAcl() {
     {resource: "posts", actions: ["*"]}
   ]);
 
-  //await globalVars.permissions.addToGroup("admin", 1);
+  //await Injector.permissions.addToGroup("admin", 1);
 }
 

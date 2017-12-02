@@ -1,27 +1,11 @@
 import * as path from "path";
-import logger from "./Logger";
-import globalVars from "./GlobalVars";
+import globalVars, {default as Injector} from "./Injector";
 import * as fs from "fs-extra";
-import {RequestHandler} from "express";
+import {IRouter, EMethods, RouteOptions} from "./interfaces/IRouter";
 
-export enum Methods {
-  GET = 'get',
-  POST = 'post',
-  PUT = 'put',
-  PATCH = 'patch',
-  DELETE = 'delete'
-}
+export const Methods = EMethods;
 
-interface RouteOptions extends Object {
-  path: string;
-  method: Methods;
-  handler: RequestHandler;
-  isProtected?: boolean;
-  permissions?: Array<string> | string;
-  resourceName?: string;
-}
-
-export class Router {
+export class Router implements IRouter {
   private _routes: Array<RouteOptions> = [];
   get routes() {
     return this._routes;
@@ -31,8 +15,14 @@ export class Router {
     routes.forEach(item => this.register(item));
   }
 
+  /**
+   * Function to register route in the Express app
+   * Can be used to add route without Router instance
+   * @param {RouteOptions} options
+   * @returns {any}
+   */
   public static register(options: RouteOptions) {
-    logger.info(`Route registered: ${options.method} - ${options.path}`);
+    Injector.logger.info(`Route registered: ${options.method} - ${options.path}`);
     if (options.permissions) {
       globalVars.expressServer.app[options.method](options.path, globalVars.auth.isAuthenticated(), globalVars.permissions.checkAccess(options.resourceName, options.permissions), options.handler);
     }
@@ -42,6 +32,13 @@ export class Router {
     globalVars.expressServer.app[options.method](options.path, options.handler);
   }
 
+  /**
+   * Function to find all router files
+   * Can recursive search
+   * Files should be in format "example.router.ts"
+   * @param modulesPath
+   * @returns {Promise<void>}
+   */
   public static async injectModuleRouters(modulesPath) {
     let files = await fs.readdir(modulesPath);
 
@@ -59,6 +56,10 @@ export class Router {
     }
   }
 
+  /**
+   * Function to add new route to Router instance
+   * @param {RouteOptions} options
+   */
   public register(options: RouteOptions) {
     let localOptions = Object.assign({}, options);
     localOptions.path = path.join(this.basePath, localOptions.path);
